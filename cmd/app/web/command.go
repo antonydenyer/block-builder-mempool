@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/antonydenyer/block-builder-mempool/app"
 	"github.com/antonydenyer/block-builder-mempool/httputil"
+	"github.com/antonydenyer/block-builder-mempool/web"
 	"github.com/urfave/cli/v2"
 	"log"
 	"net/http"
@@ -12,8 +13,8 @@ import (
 
 func Command() *cli.Command {
 	return &cli.Command{
-		Name:  "runserver",
-		Usage: "start API server",
+		Name:  "web",
+		Usage: "start API web",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "addr",
@@ -22,7 +23,8 @@ func Command() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			ctx, app, err := app.Start(c.Context, "api", c.String("env"))
+			web.RegisterRoutes()
+			ctx, app, err := app.Start(c.Context, "web", c.String("env"))
 			if err != nil {
 				return err
 			}

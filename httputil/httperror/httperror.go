@@ -11,7 +11,7 @@ import (
 var (
 	errEOF      = BadRequest("eof", "EOF reading HTTP request body")
 	ErrNotFound = NotFound("not found")
-	ErrInternal = New(http.StatusInternalServerError, "internal", "internal server error")
+	ErrInternal = New(http.StatusInternalServerError, "internal", "internal web error")
 )
 
 func NotFound(msg string, args ...interface{}) Error {

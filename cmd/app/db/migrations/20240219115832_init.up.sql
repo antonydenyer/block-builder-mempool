@@ -37,6 +37,7 @@ CREATE TABLE block_transactions
     transaction_gas_used     numeric NOT NULL,
     block_extra_data         varchar NULL,
     block_gas_used           numeric NULL,
+    block_gas_limit          numeric NULL,
 
     CONSTRAINT block_transactions_pkey PRIMARY KEY (block_number, hash)
 );

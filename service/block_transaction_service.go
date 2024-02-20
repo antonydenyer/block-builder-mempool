@@ -21,12 +21,15 @@ func NewBlockTransactionsService(db *bun.DB) BlockTransactionService {
 }
 
 type BlockTransaction struct {
-	BlockNumber     uint64 `json:"blockNumber"`
-	Hash            string `json:"hash"`
-	Status          string `json:"status"`
-	EffectiveGasTip uint64 `json:"effectiveGasTip"`
-	BlockExtraData  string `json:"blockExtraData"`
-	BlockGasUsed    uint64 `json:"blockGasUsed"`
+	BlockNumber            uint64
+	Hash                   string
+	Status                 string
+	EffectiveGasTip        uint64
+	TransactionGasUsed     uint64
+	TransactionFeeEstimate uint64
+	BlockExtraData         string
+	BlockGasUsed           uint64
+	BlockGasLimit          uint64
 }
 
 func (s BlockTransactionService) InsertNextTransactions(_ context.Context, block *ethTypes.Block) (int64, error) {
@@ -87,6 +90,7 @@ func (s BlockTransactionService) UpdateCurrent(ctx context.Context, block *ethTy
 		Model(&BlockTransaction{
 			BlockExtraData: string(block.Extra()),
 			BlockGasUsed:   block.GasUsed(),
+			BlockGasLimit:  block.GasLimit(),
 		}).
 		Column("block_extra_data", "block_gas_used").
 		Where("block_number = ?", block.NumberU64()).
@@ -97,6 +101,17 @@ func (s BlockTransactionService) UpdateCurrent(ctx context.Context, block *ethTy
 	}
 
 	return insert.RowsAffected()
+}
+
+func (s BlockTransactionService) Get(ctx context.Context) ([]BlockTransaction, error) {
+	var blockTransactions []BlockTransaction
+	err := s.db.
+		NewSelect().
+		Model(&blockTransactions).
+		Order("block_number DESC").
+		Scan(ctx)
+
+	return blockTransactions, err
 }
 
 func CalcNextBaseFee(parentGasUsed, parentBaseFee, parentGasLimit *big.Int) *big.Int {

@@ -28,13 +28,13 @@ go run cmd/bun/main.go -env=dev db migrate
 To start the server:
 
 ```shell
-go run cmd/bun/main.go -env=dev server
+go run cmd/bun/main.go -env=dev web
 ```
 
-Then run the tests in [example](example) package:
+Then run the tests in [example](web) package:
 
 ```shell
-cd example
+cd web
 go test
 ```
 
