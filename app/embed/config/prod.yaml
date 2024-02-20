@@ -1,0 +1,9 @@
+debug: true
+
+db:
+  dsn: ${DB_DSN}
+  username: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
+
+chain_id: "${CHAIN_ID}"
+client: "${RPC_CLIENT_URL}"

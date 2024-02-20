@@ -1,0 +1,9 @@
+debug: true
+
+db:
+  dsn: postgres://localhost:5432/block_builder_mempool?sslmode=disable
+  username: postgres
+  password: postgres
+
+chain_id: 1
+client: "${RPC_CLIENT_URL}"
