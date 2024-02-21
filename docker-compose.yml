@@ -59,6 +59,16 @@ services:
   pool:
     <<: *block-builder-mempool
     entrypoint: ["app", "pool"]
+    restart: always
+    depends_on:
+      db-migrate:
+        condition: service_completed_successfully
+
+  web:
+    <<: *block-builder-mempool
+    entrypoint: ["app", "web"]
+    ports:
+      - "8000:8000"
     depends_on:
       db-migrate:
         condition: service_completed_successfully

@@ -17,6 +17,6 @@ USER appuser
 
 COPY --from=builder /app /usr/bin/app
 
-EXPOSE 8080
+EXPOSE 8000
 
 ENTRYPOINT [ "app" ]

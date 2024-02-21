@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/samber/lo"
 	"github.com/uptrace/bun"
 	"math/big"
 )
@@ -14,8 +16,8 @@ type BlockTransactionService struct {
 	db *bun.DB
 }
 
-func NewBlockTransactionsService(db *bun.DB) BlockTransactionService {
-	return BlockTransactionService{
+func NewBlockTransactionsService(db *bun.DB) *BlockTransactionService {
+	return &BlockTransactionService{
 		db: db,
 	}
 }
@@ -30,6 +32,25 @@ type BlockTransaction struct {
 	BlockExtraData         string
 	BlockGasUsed           uint64
 	BlockGasLimit          uint64
+}
+
+type BlockViewModel struct {
+	BlockNumber         uint64                  `json:"blockNumber"`
+	ExtraData           string                  `json:"extraData"`
+	GasUsed             uint64                  `json:"gasUsed"`
+	GasLimit            uint64                  `json:"gasLimit"`
+	BlockSpaceRemaining int64                   `json:"blockSpaceRemaining"`
+	MissedTransactions  []TransactionsViewModel `json:"missedTransactions"`
+	MissedGasTotal      uint64                  `json:"missedGasTotal"`
+	MissedPriorityFees  uint64                  `json:"missedPriorityFees"`
+	MaxPriorityFee      uint64                  `json:"maxPriorityFee"`
+}
+
+type TransactionsViewModel struct {
+	Hash                   string `json:"hash"`
+	EffectiveGasTip        uint64 `json:"effectiveGasTip"`
+	TransactionFeeEstimate uint64 `json:"transactionFeeEstimate"`
+	TransactionGasUsed     uint64 `json:"transactionGasUsed"`
 }
 
 func (s BlockTransactionService) InsertNextTransactions(_ context.Context, block *ethTypes.Block) (int64, error) {
@@ -92,7 +113,7 @@ func (s BlockTransactionService) UpdateCurrent(ctx context.Context, block *ethTy
 			BlockGasUsed:   block.GasUsed(),
 			BlockGasLimit:  block.GasLimit(),
 		}).
-		Column("block_extra_data", "block_gas_used").
+		Column("block_extra_data", "block_gas_used", "block_gas_limit").
 		Where("block_number = ?", block.NumberU64()).
 		Exec(ctx)
 
@@ -103,15 +124,75 @@ func (s BlockTransactionService) UpdateCurrent(ctx context.Context, block *ethTy
 	return insert.RowsAffected()
 }
 
-func (s BlockTransactionService) Get(ctx context.Context) ([]BlockTransaction, error) {
-	var blockTransactions []BlockTransaction
+func (s BlockTransactionService) Get(ctx context.Context) ([]*BlockViewModel, error) {
+	var blocks []BlockTransaction
 	err := s.db.
 		NewSelect().
-		Model(&blockTransactions).
+		Model(&blocks).
+		Where("status = 'PENDING' AND block_gas_used IS NOT NULL").
 		Order("block_number DESC").
 		Scan(ctx)
 
-	return blockTransactions, err
+	if err != nil {
+		return nil, err
+	}
+
+	part := lo.PartitionBy(blocks, func(b BlockTransaction) uint64 {
+		return b.BlockNumber
+	})
+
+	blocksViewModel := lo.Map(part, func(block []BlockTransaction, _ int) *BlockViewModel {
+		return MapBlockTransaction(block)
+	})
+	return blocksViewModel, nil
+}
+func (s BlockTransactionService) GetByNumber(ctx context.Context, blockNumber uint64) (*BlockViewModel, error) {
+	var blocks []BlockTransaction
+	err := s.db.
+		NewSelect().
+		Model(&blocks).
+		Where("block_number = ? AND status = 'PENDING' AND block_gas_used IS NOT NULL", blockNumber).
+		Order("block_number DESC").
+		Scan(ctx)
+
+	if blocks == nil {
+		return nil, fmt.Errorf("not found or pending")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return MapBlockTransaction(blocks), nil
+}
+func MapBlockTransaction(block []BlockTransaction) *BlockViewModel {
+	missedTransactions := lo.Map(block, func(tx BlockTransaction, _ int) TransactionsViewModel {
+		return TransactionsViewModel{
+			Hash:                   tx.Hash,
+			EffectiveGasTip:        tx.EffectiveGasTip,
+			TransactionFeeEstimate: tx.TransactionFeeEstimate,
+			TransactionGasUsed:     tx.TransactionGasUsed,
+		}
+	})
+
+	missedGasTotal := lo.SumBy(missedTransactions, func(a TransactionsViewModel) uint64 {
+		return a.TransactionGasUsed
+	})
+
+	return &BlockViewModel{
+		BlockNumber:         block[0].BlockNumber,
+		ExtraData:           block[0].BlockExtraData,
+		GasUsed:             block[0].BlockGasUsed,
+		GasLimit:            block[0].BlockGasLimit,
+		BlockSpaceRemaining: int64(block[0].BlockGasLimit) - int64(block[0].BlockGasUsed+missedGasTotal),
+		MissedTransactions:  missedTransactions,
+		MissedPriorityFees: lo.SumBy(missedTransactions, func(a TransactionsViewModel) uint64 {
+			return a.TransactionFeeEstimate
+		}),
+		MissedGasTotal: missedGasTotal,
+		MaxPriorityFee: lo.MaxBy(missedTransactions, func(a TransactionsViewModel, b TransactionsViewModel) bool {
+			return a.EffectiveGasTip > b.EffectiveGasTip
+		}).EffectiveGasTip,
+	}
 }
 
 func CalcNextBaseFee(parentGasUsed, parentBaseFee, parentGasLimit *big.Int) *big.Int {

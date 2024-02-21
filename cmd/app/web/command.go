@@ -18,7 +18,7 @@ func Command() *cli.Command {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "addr",
-				Value: "localhost:8000",
+				Value: "0.0.0.0:8000",
 				Usage: "serve address",
 			},
 		},
