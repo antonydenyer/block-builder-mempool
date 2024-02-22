@@ -144,7 +144,10 @@ func (s BlockTransactionService) Get(ctx context.Context) ([]*BlockViewModel, er
 	blocksViewModel := lo.Map(part, func(block []BlockTransaction, _ int) *BlockViewModel {
 		return MapBlockTransaction(block)
 	})
-	return blocksViewModel, nil
+
+	return lo.Filter(blocksViewModel, func(item *BlockViewModel, index int) bool {
+		return item.BlockSpaceRemaining > 0
+	}), nil
 }
 func (s BlockTransactionService) GetByNumber(ctx context.Context, blockNumber uint64) (*BlockViewModel, error) {
 	var blocks []BlockTransaction
