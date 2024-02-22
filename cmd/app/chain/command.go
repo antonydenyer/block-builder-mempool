@@ -76,7 +76,7 @@ func Command() *cli.Command {
 				}
 
 				nextBlockNumber := block.NumberU64() + 1
-				time.Sleep(time.Until(time.UnixMilli(int64(block.Time() * 1000)).Add(13 * time.Second)))
+				time.Sleep(time.Until(time.UnixMilli(int64(block.Time() * 1000)).Add(12 * time.Second).Add(6 * time.Second)))
 
 				for block == nil || block.NumberU64() != nextBlockNumber {
 					block, err = ethClient.BlockByNumber(application.Context(), new(big.Int).SetUint64(nextBlockNumber))
