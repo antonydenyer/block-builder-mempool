@@ -40,10 +40,11 @@ type BlockViewModel struct {
 	GasUsed             uint64                  `json:"gasUsed"`
 	GasLimit            uint64                  `json:"gasLimit"`
 	BlockSpaceRemaining int64                   `json:"blockSpaceRemaining"`
+	PercentageUsed      float64                 `json:"percentageUsed"`
 	MissedTransactions  []TransactionsViewModel `json:"missedTransactions"`
 	MissedGasTotal      uint64                  `json:"missedGasTotal"`
-	MissedPriorityFees  uint64                  `json:"missedPriorityFees"`
-	MaxPriorityFee      uint64                  `json:"maxPriorityFee"`
+	MissedPriorityFees  float64                 `json:"missedPriorityFees"`
+	MaxPriorityFee      float64                 `json:"maxPriorityFee"`
 }
 
 type TransactionsViewModel struct {
@@ -181,21 +182,24 @@ func MapBlockTransaction(block []BlockTransaction) *BlockViewModel {
 	missedGasTotal := lo.SumBy(missedTransactions, func(a TransactionsViewModel) uint64 {
 		return a.TransactionGasUsed
 	})
+	maxPriorityFee := lo.MaxBy(missedTransactions, func(a TransactionsViewModel, b TransactionsViewModel) bool {
+		return a.EffectiveGasTip > b.EffectiveGasTip
+	}).EffectiveGasTip
 
+	missedPriorityFees := lo.SumBy(missedTransactions, func(a TransactionsViewModel) uint64 {
+		return a.TransactionFeeEstimate
+	})
 	return &BlockViewModel{
 		BlockNumber:         block[0].BlockNumber,
 		ExtraData:           block[0].BlockExtraData,
 		GasUsed:             block[0].BlockGasUsed,
 		GasLimit:            block[0].BlockGasLimit,
+		PercentageUsed:      float64(block[0].BlockGasUsed) / float64(block[0].BlockGasLimit) * 100,
 		BlockSpaceRemaining: int64(block[0].BlockGasLimit) - int64(block[0].BlockGasUsed+missedGasTotal),
 		MissedTransactions:  missedTransactions,
-		MissedPriorityFees: lo.SumBy(missedTransactions, func(a TransactionsViewModel) uint64 {
-			return a.TransactionFeeEstimate
-		}),
-		MissedGasTotal: missedGasTotal,
-		MaxPriorityFee: lo.MaxBy(missedTransactions, func(a TransactionsViewModel, b TransactionsViewModel) bool {
-			return a.EffectiveGasTip > b.EffectiveGasTip
-		}).EffectiveGasTip,
+		MissedPriorityFees:  float64(missedPriorityFees) / 1000 / 1000 / 1000,
+		MissedGasTotal:      missedGasTotal,
+		MaxPriorityFee:      float64(maxPriorityFee) / 1000 / 1000 / 1000,
 	}
 }
 

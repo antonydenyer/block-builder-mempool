@@ -37,12 +37,10 @@
                 <tr>
                     <th scope="col">Block Number</th>
                     <th scope="col">ExtraData</th>
-                    <th scope="col">Gas Used</th>
-                    <th scope="col">Gas Limit</th>
-                    <th scope="col">Block Space Remaining</th>
+                    <th scope="col">Gas Percentage</th>
                     <th scope="col">Missed Gas Total</th>
-                    <th scope="col">Missed Priority Fee</th>
-                    <th scope="col">Max Missed Priority Fee</th>
+                    <th scope="col">Missed Priority Fee Gwei</th>
+                    <th scope="col">Max Missed Priority Fee Gwei</th>
                     <th scope="col">Missed Transactions Count</th>
                 </tr>
                 </thead>
@@ -51,12 +49,10 @@
                 <tr>
                     <td><a href="/blocks/{{.BlockNumber}}">{{.BlockNumber}}</a></td>
                     <td>{{.ExtraData}}</td>
-                    <td>{{.GasUsed}}</td>
-                    <td>{{.GasLimit}}</td>
-                    <td>{{.BlockSpaceRemaining}}</td>
+                    <td>{{printf "%.2f" .PercentageUsed}}</td>
                     <td>{{.MissedGasTotal}}</td>
-                    <td>{{.MissedPriorityFees}}</td>
-                    <td>{{.MaxPriorityFee}}</td>
+                    <td>{{printf "%.4f" .MissedPriorityFees}}</td>
+                    <td>{{printf "%.4f" .MaxPriorityFee}}</td>
                     <td>{{len .MissedTransactions}}</td>
                 </tr>
                 {{end}}

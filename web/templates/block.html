@@ -36,7 +36,7 @@
                 <h5 class="card-title">Details</h5>
                 <dl class="row">
                     <dt class="col-sm-4">Block Number:</dt>
-                    <dd class="col-sm-8">{{.BlockNumber}}</dd>
+                    <dd class="col-sm-8"><a href="https://etherscan.io/block/{{.BlockNumber}}">{{.BlockNumber}}</a></dd>
 
                     <dt class="col-sm-4">Extra Data:</dt>
                     <dd class="col-sm-8">{{.ExtraData}}</dd>
@@ -50,13 +50,16 @@
                     <dt class="col-sm-4">Gas Difference:</dt>
                     <dd class="col-sm-8">{{.BlockSpaceRemaining}}</dd>
 
+                    <dt class="col-sm-4">Percentage:</dt>
+                    <dd class="col-sm-8">{{.PercentageUsed}}</dd>
+
                     <dt class="col-sm-4">Missed Gas Total:</dt>
                     <dd class="col-sm-8">{{.MissedGasTotal}}</dd>
 
-                    <dt class="col-sm-4">Missed Priority Fees:</dt>
+                    <dt class="col-sm-4">Missed Priority Fees Gwei:</dt>
                     <dd class="col-sm-8">{{.MissedPriorityFees}}</dd>
 
-                    <dt class="col-sm-4">Max Missed Priority Fee:</dt>
+                    <dt class="col-sm-4">Max Missed Priority Fee Gwei:</dt>
                     <dd class="col-sm-8">{{.MaxPriorityFee}}</dd>
                 </dl>
             </div>
