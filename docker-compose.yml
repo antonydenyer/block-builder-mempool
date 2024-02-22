@@ -52,6 +52,7 @@ services:
   chain:
     <<: *block-builder-mempool
     entrypoint: ["app", "chain"]
+    restart: always
     depends_on:
       db-migrate:
         condition: service_completed_successfully
@@ -67,6 +68,7 @@ services:
   web:
     <<: *block-builder-mempool
     entrypoint: ["app", "web"]
+    restart: always
     ports:
       - "8000:8000"
     depends_on:
