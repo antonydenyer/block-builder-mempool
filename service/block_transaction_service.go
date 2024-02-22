@@ -164,6 +164,7 @@ func (s BlockTransactionService) GetByNumber(ctx context.Context, blockNumber ui
 
 	return MapBlockTransaction(blocks), nil
 }
+
 func MapBlockTransaction(block []BlockTransaction) *BlockViewModel {
 	missedTransactions := lo.Map(block, func(tx BlockTransaction, _ int) TransactionsViewModel {
 		return TransactionsViewModel{
