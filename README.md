@@ -15,9 +15,15 @@ Copy the env file and change your params
 ```shell
 cp example.env .env
 ```
+Update the `RPC_CLIENT_URL` with your node info.
 
 Then just run
 
 ```shell
 docker-compose up --build
 ```
+
+Visit http://localhost:8000/
+
+
+Not that the data is not 100% accurate, it is merely a tool to use to help identify blocks that rquire further investigation.

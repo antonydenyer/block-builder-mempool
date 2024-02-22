@@ -16,6 +16,7 @@ x-block-builder-mempool:
     DB_PASSWORD: "postgres"
     RPC_CLIENT_URL: "${RPC_CLIENT_URL}"
     CHAIN_ID: "${CHAIN_ID}"
+    PORT: "${PORT}:8000"
 
 services:
   db:
@@ -70,7 +71,7 @@ services:
     entrypoint: ["app", "web"]
     restart: always
     ports:
-      - "80:8000"
+      - "${PORT}:8000"
     depends_on:
       db-migrate:
         condition: service_completed_successfully
