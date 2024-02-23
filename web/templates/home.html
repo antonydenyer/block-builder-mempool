@@ -40,6 +40,7 @@
                     <th scope="col">Gas Percentage</th>
                     <th scope="col">Missed Gas Total</th>
                     <th scope="col">Missed Priority Fee Gwei</th>
+                    <th scope="col">Block Min +ve Priority Fee Gwei</th>
                     <th scope="col">Max Missed Priority Fee Gwei</th>
                     <th scope="col">Missed Transactions Count</th>
                 </tr>
@@ -52,6 +53,7 @@
                     <td>{{printf "%.2f" .PercentageUsed}}</td>
                     <td>{{.MissedGasTotal}}</td>
                     <td>{{printf "%.4f" .MissedPriorityFees}}</td>
+                    <td>{{printf "%.4f" .MinPriorityFee}}</td>
                     <td>{{printf "%.4f" .MaxPriorityFee}}</td>
                     <td>{{len .MissedTransactions}}</td>
                 </tr>

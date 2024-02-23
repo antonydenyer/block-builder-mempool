@@ -32,19 +32,21 @@ type BlockTransaction struct {
 	BlockExtraData         string
 	BlockGasUsed           uint64
 	BlockGasLimit          uint64
+	BlockMinPriorityFee    uint64
 }
 
 type BlockViewModel struct {
-	BlockNumber         uint64                  `json:"blockNumber"`
-	ExtraData           string                  `json:"extraData"`
-	GasUsed             uint64                  `json:"gasUsed"`
-	GasLimit            uint64                  `json:"gasLimit"`
-	BlockSpaceRemaining int64                   `json:"blockSpaceRemaining"`
-	PercentageUsed      float64                 `json:"percentageUsed"`
-	MissedTransactions  []TransactionsViewModel `json:"missedTransactions"`
-	MissedGasTotal      uint64                  `json:"missedGasTotal"`
-	MissedPriorityFees  float64                 `json:"missedPriorityFees"`
-	MaxPriorityFee      float64                 `json:"maxPriorityFee"`
+	BlockNumber         uint64
+	ExtraData           string
+	GasUsed             uint64
+	GasLimit            uint64
+	MinPriorityFee      float64
+	BlockSpaceRemaining int64
+	PercentageUsed      float64
+	MissedTransactions  []TransactionsViewModel
+	MissedGasTotal      uint64
+	MissedPriorityFees  float64
+	MaxPriorityFee      float64
 }
 
 type TransactionsViewModel struct {
@@ -108,13 +110,22 @@ func (s BlockTransactionService) UpdateCurrent(ctx context.Context, block *ethTy
 		return 0, err
 	}
 
+	positivePriorityFee := lo.Filter(block.Transactions(), func(item *ethTypes.Transaction, index int) bool {
+		return item.GasTipCap() != nil && item.GasTipCap().Uint64() > 0
+	})
+
+	minPriorityFee := lo.MinBy(positivePriorityFee, func(a *ethTypes.Transaction, b *ethTypes.Transaction) bool {
+		return a.GasTipCap().Uint64() < b.GasTipCap().Uint64()
+	})
+
 	insert, err = s.db.NewUpdate().
 		Model(&BlockTransaction{
-			BlockExtraData: string(block.Extra()),
-			BlockGasUsed:   block.GasUsed(),
-			BlockGasLimit:  block.GasLimit(),
+			BlockExtraData:      string(block.Extra()),
+			BlockGasUsed:        block.GasUsed(),
+			BlockGasLimit:       block.GasLimit(),
+			BlockMinPriorityFee: minPriorityFee.GasTipCap().Uint64(),
 		}).
-		Column("block_extra_data", "block_gas_used", "block_gas_limit").
+		Column("block_extra_data", "block_gas_used", "block_gas_limit", "block_min_priority_fee").
 		Where("block_number = ?", block.NumberU64()).
 		Exec(ctx)
 
@@ -194,6 +205,7 @@ func MapBlockTransaction(block []BlockTransaction) *BlockViewModel {
 		ExtraData:           block[0].BlockExtraData,
 		GasUsed:             block[0].BlockGasUsed,
 		GasLimit:            block[0].BlockGasLimit,
+		MinPriorityFee:      float64(block[0].BlockMinPriorityFee) / 1000 / 1000 / 1000,
 		PercentageUsed:      float64(block[0].BlockGasUsed) / float64(block[0].BlockGasLimit) * 100,
 		BlockSpaceRemaining: int64(block[0].BlockGasLimit) - int64(block[0].BlockGasUsed+missedGasTotal),
 		MissedTransactions:  missedTransactions,
