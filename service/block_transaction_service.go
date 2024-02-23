@@ -48,10 +48,10 @@ type BlockViewModel struct {
 }
 
 type TransactionsViewModel struct {
-	Hash                   string `json:"hash"`
-	EffectiveGasTip        uint64 `json:"effectiveGasTip"`
-	TransactionFeeEstimate uint64 `json:"transactionFeeEstimate"`
-	TransactionGasUsed     uint64 `json:"transactionGasUsed"`
+	Hash                   string  `json:"hash"`
+	EffectiveGasTip        float64 `json:"effectiveGasTip"`
+	TransactionFeeEstimate float64 `json:"transactionFeeEstimate"`
+	TransactionGasUsed     uint64  `json:"transactionGasUsed"`
 }
 
 func (s BlockTransactionService) InsertNextTransactions(_ context.Context, block *ethTypes.Block) (int64, error) {
@@ -173,8 +173,8 @@ func MapBlockTransaction(block []BlockTransaction) *BlockViewModel {
 	missedTransactions := lo.Map(block, func(tx BlockTransaction, _ int) TransactionsViewModel {
 		return TransactionsViewModel{
 			Hash:                   tx.Hash,
-			EffectiveGasTip:        tx.EffectiveGasTip / 1000 / 1000 / 1000,
-			TransactionFeeEstimate: tx.TransactionFeeEstimate / 1000 / 1000 / 1000,
+			EffectiveGasTip:        float64(tx.EffectiveGasTip) / 1000 / 1000 / 1000,
+			TransactionFeeEstimate: float64(tx.TransactionFeeEstimate) / 1000 / 1000 / 1000,
 			TransactionGasUsed:     tx.TransactionGasUsed,
 		}
 	})
@@ -186,7 +186,7 @@ func MapBlockTransaction(block []BlockTransaction) *BlockViewModel {
 		return a.EffectiveGasTip > b.EffectiveGasTip
 	}).EffectiveGasTip
 
-	missedPriorityFees := lo.SumBy(missedTransactions, func(a TransactionsViewModel) uint64 {
+	missedPriorityFees := lo.SumBy(missedTransactions, func(a TransactionsViewModel) float64 {
 		return a.TransactionFeeEstimate
 	})
 	return &BlockViewModel{
@@ -197,9 +197,9 @@ func MapBlockTransaction(block []BlockTransaction) *BlockViewModel {
 		PercentageUsed:      float64(block[0].BlockGasUsed) / float64(block[0].BlockGasLimit) * 100,
 		BlockSpaceRemaining: int64(block[0].BlockGasLimit) - int64(block[0].BlockGasUsed+missedGasTotal),
 		MissedTransactions:  missedTransactions,
-		MissedPriorityFees:  float64(missedPriorityFees),
+		MissedPriorityFees:  missedPriorityFees,
 		MissedGasTotal:      missedGasTotal,
-		MaxPriorityFee:      float64(maxPriorityFee),
+		MaxPriorityFee:      maxPriorityFee,
 	}
 }
 
