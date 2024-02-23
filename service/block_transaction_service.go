@@ -173,8 +173,8 @@ func MapBlockTransaction(block []BlockTransaction) *BlockViewModel {
 	missedTransactions := lo.Map(block, func(tx BlockTransaction, _ int) TransactionsViewModel {
 		return TransactionsViewModel{
 			Hash:                   tx.Hash,
-			EffectiveGasTip:        tx.EffectiveGasTip,
-			TransactionFeeEstimate: tx.TransactionFeeEstimate,
+			EffectiveGasTip:        tx.EffectiveGasTip / 1000 / 1000 / 1000,
+			TransactionFeeEstimate: tx.TransactionFeeEstimate / 1000 / 1000 / 1000,
 			TransactionGasUsed:     tx.TransactionGasUsed,
 		}
 	})
@@ -197,9 +197,9 @@ func MapBlockTransaction(block []BlockTransaction) *BlockViewModel {
 		PercentageUsed:      float64(block[0].BlockGasUsed) / float64(block[0].BlockGasLimit) * 100,
 		BlockSpaceRemaining: int64(block[0].BlockGasLimit) - int64(block[0].BlockGasUsed+missedGasTotal),
 		MissedTransactions:  missedTransactions,
-		MissedPriorityFees:  float64(missedPriorityFees) / 1000 / 1000 / 1000,
+		MissedPriorityFees:  float64(missedPriorityFees),
 		MissedGasTotal:      missedGasTotal,
-		MaxPriorityFee:      float64(maxPriorityFee) / 1000 / 1000 / 1000,
+		MaxPriorityFee:      float64(maxPriorityFee),
 	}
 }
 
