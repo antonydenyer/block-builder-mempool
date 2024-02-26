@@ -87,6 +87,8 @@ func (s BlockTransactionService) InsertNextTransactions(_ context.Context, block
 		"status = 'PENDING' "+
 		"and "+
 		"max_fee_per_gas > ?1 "+
+		"and "+
+		"created_at > NOW() - INTERVAL '1 hour' "+
 		"ON CONFLICT (block_number, hash) DO NOTHING", block.NumberU64()+1, nextBaseFee.Uint64())
 
 	if err != nil {
