@@ -144,6 +144,7 @@ func (s BlockTransactionService) Get(ctx context.Context) ([]*BlockViewModel, er
 		NewSelect().
 		Model(&blocks).
 		Where("status = 'PENDING' AND block_gas_used IS NOT NULL").
+		Limit(1000).
 		Order("block_number DESC").
 		Scan(ctx)
 
