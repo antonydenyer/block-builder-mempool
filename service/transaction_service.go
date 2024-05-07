@@ -28,6 +28,7 @@ type Transaction struct {
 	From                 string    `json:"from"`
 	To                   *string   `json:"to"`
 	Input                string    `json:"input"`
+	Type                 *uint8    `json:"type"`
 }
 
 type TransactionCount struct {

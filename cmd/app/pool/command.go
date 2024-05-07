@@ -81,10 +81,11 @@ func Command() *cli.Command {
 						})
 
 					if err != nil {
-						fmt.Println(err)
+						fmt.Printf("%s %v", tChan.Hex(), err)
 						continue
 					}
 
+					txType := tx.Type()
 					pendingTx := &service.Transaction{
 						Hash:                 tx.Hash().Hex(),
 						Raw:                  "0x" + common.Bytes2Hex(raw),
@@ -96,6 +97,7 @@ func Command() *cli.Command {
 						Nonce:                tx.Nonce(),
 						From:                 strings.ToLower(sender.Hex()),
 						Input:                strings.ToLower(hexutils.BytesToHex(tx.Data())),
+						Type:                 &txType,
 					}
 
 					if tx.To() != nil {
